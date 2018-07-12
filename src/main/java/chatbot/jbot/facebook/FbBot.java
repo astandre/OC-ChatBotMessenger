@@ -1,6 +1,10 @@
 package chatbot.jbot.facebook;
 
 
+import chatbot.jbot.BL.BL_Curso;
+import chatbot.jbot.DC.DC_Curso;
+import chatbot.jbot.JBotApplication;
+import chatbot.jbot.Util;
 import chatbot.jbot.model.Movie;
 import me.ramswaroop.jbot.core.common.Controller;
 import me.ramswaroop.jbot.core.common.EventType;
@@ -19,15 +23,15 @@ import javax.annotation.PostConstruct;
 
 import chatbot.jbot.moviesHandler;
 
+import java.sql.Connection;
 import java.util.ArrayList;
 
 /**
- * A simple Facebook Bot. You can create multiple bots by just
- * extending {@link Bot} class like this one. Though it is
- * recommended to create only bot per jbot instance.
+ * Chatbot diseñado para resolver dudas acerca de la plataforma
+ * Open Cmpus y sus diferentes cursos
  *
- * @author ramswaroop
- * @version 17/09/2016
+ * @author Andre Herrera
+ * @version 06/07/2018
  */
 @JBot
 @Profile("facebook")
@@ -59,7 +63,7 @@ public class FbBot extends Bot {
     /**
      * Creando lista de peliculas
      */
-    ArrayList<Movie> lstMovies = moviesHandler.createMovies();
+//    ArrayList<Movie> lstMovies = moviesHandler.createMovies();
 
     /**
      * Sets the "Get Started" button with a payload "hi". It also set the "Greeting Text" which the user sees when it
@@ -68,8 +72,86 @@ public class FbBot extends Bot {
      */
     @PostConstruct
     public void init() {
-        setGetStartedButton("Empezar");
-        setGreetingText(new Payload[]{new Payload().setLocale("default").setText("Chat bot creado con la libreria Jbot")});
+        setGetStartedButton("menu");
+        setGreetingText(new Payload[]{new Payload().setLocale("default").setText("OC-Chatbot para resolver dudas de Open" +
+                " Campus y sus diferentes cursos. Ingresa menu para ver lo que puedo hacer")});
+    }
+
+
+    @Controller(events = EventType.MESSAGE, pattern = "^(cursos|Cursos)$")
+    public void showAllCursos(Event event) {
+//        TODO display as buttons.
+        reply(event, "Los cursos disponibles son:");
+        ArrayList<String> cursos = BL_Curso.getCursos(JBotApplication.getConnection());
+        String response = "";
+        for (String curso : cursos) {
+            response = response + curso + "\n";
+        }
+        reply(event, response);
+    }
+
+    @Controller(events = {EventType.MESSAGE, EventType.QUICK_REPLY}, pattern = "^(info|Info)")
+    public void info(Event event) {
+        Connection cn = JBotApplication.getConnection();
+        ArrayList<String> cursos = BL_Curso.getCursos(cn);
+//        Button[] quickReplies = new Button[9];
+        if (event.getType() == EventType.MESSAGE) {
+            System.out.println(String.format("Text: %s", event.getMessage().getText()));
+            String message = event.getMessage().getText();
+            if (message.length() == 4) {
+                Button[] quickReplies = Util.displayCursoOptions(cursos,0,"info","1");
+                reply(event, new Message().setText("Que curso te gustaria conocer?").setQuickReplies(quickReplies));
+            }else{
+                String curso = message.substring(5,message.length());
+                String resp = BL_Curso.getCursoInfo(cn,Util.cleanData(curso));
+                if (!resp.equals("0")){
+                    reply(event, new Message().setText(resp));
+                }else{
+                    reply(event, new Message().setText("No se ha encontrado el curso "+curso));
+                }
+            }
+        } else {
+            System.out.println(String.format("Payload: %s", event.getMessage().getQuickReply().getPayload()));
+            String message = event.getMessage().getQuickReply().getPayload();
+            if (message.equals("info")) {
+                Button[] quickReplies = Util.displayCursoOptions(cursos,0,"info","1");
+                reply(event, new Message().setText("Que curso te gustaria conocer?").setQuickReplies(quickReplies));
+            }
+            if (message.equals("info1")) {
+                Button[] quickReplies = Util.displayCursoOptions(cursos,8,"info","2");
+                reply(event, new Message().setText("Desplegando más cursos\nQue curso te gustaria conocer?")
+                        .setQuickReplies(quickReplies));
+            }
+            if (message.equals("info2")) {
+                Button[] quickReplies = Util.displayCursoOptions(cursos,16,"info","");
+                reply(event, new Message().setText("Desplegando cursos\nQue curso te gustaria conocer?")
+                        .setQuickReplies(quickReplies));
+            }
+            if (message.length()>5){
+                String curso = message.substring(5,message.length());
+                String resp = BL_Curso.getCursoInfo(cn,Util.cleanData(curso));
+                if (!resp.equals("0")){
+                    reply(event, new Message().setText(resp));
+                }else{
+                    reply(event, new Message().setText("No se ha encontrado el curso "+curso));
+                }
+            }
+        }
+    }
+
+    @Controller(events = {EventType.MESSAGE, EventType.POSTBACK}, pattern = "^(menu|Menu)$")
+    public void showMenu(Event event) {
+        // quick reply buttons
+        String comandos []= {"Info","Pre","Fechas"};
+        Button[] quickReplies = new Button[comandos.length];
+        int i = 0;
+        for (String comando : comandos) {
+            quickReplies[i] = new Button().setContentType("text").setTitle(comando).setPayload(comando.toLowerCase());
+            i++;
+
+        }
+
+        reply(event, new Message().setText("Comandos disponibles:").setQuickReplies(quickReplies));
     }
 
     /**
@@ -79,7 +161,7 @@ public class FbBot extends Bot {
      *
      * @param event
      */
-    @Controller(events = {EventType.MESSAGE, EventType.POSTBACK}, pattern = "^(?i)(hola|saludos|Empezar)$")
+    @Controller(events = {EventType.MESSAGE, EventType.POSTBACK}, pattern = "^(?i)(hola|saludos)$")
     public void onGetStarted(Event event) {
         // quick reply buttons
         Button[] quickReplies = new Button[]{
@@ -90,73 +172,58 @@ public class FbBot extends Bot {
     }
 
     /**
-     * Metodo que muestra las peliculas con entradas disponibles al mecionar la palabra entrada
-     */
-    @Controller(events = EventType.MESSAGE, pattern = "(?i:entrada)")
-    public void showAvalibleMovies(Event event) {
-        reply(event, "Entradas disponibles para las siguientes peliculas:");
-        for (Movie movie : lstMovies) {
-            if (movie.getBoletos()) {
-                String movieTitle = movie.getNombre();
-                reply(event, movieTitle);
-            }
-
-        }
-    }
-
-    /**
      * mostrar informacion acerca de pelicula
      *
      * @param event
      */
-    @Controller(events = {EventType.MESSAGE, EventType.QUICK_REPLY}, pattern = "(info)")
-    public void showInfoMovie(Event event) {
-        reply(event, "Informacion");
-        int aux = event.getMessage().getQuickReply().getPayload().length();
-        String word = event.getMessage().getQuickReply().getPayload().substring(5, aux);
-        for (Movie movie : lstMovies) {
-            if (movie.getNombre().contains(word)) {
-                String movieTitle = movie.getNombre();
-                reply(event, movieTitle + "\n" + movie.getSinopsis());
-            }
-
-        }
-    }
+//    @Controller(events = {EventType.MESSAGE, EventType.QUICK_REPLY}, pattern = "(info)")
+//    public void showInfoMovie(Event event) {
+//        reply(event, "Informacion");
+//        int aux = event.getMessage().getQuickReply().getPayload().length();
+//        String word = event.getMessage().getQuickReply().getPayload().substring(5, aux);
+//        for (Movie movie : lstMovies) {
+//            if (movie.getNombre().contains(word)) {
+//                String movieTitle = movie.getNombre();
+//                reply(event, movieTitle + "\n" + movie.getSinopsis());
+//            }
+//
+//        }
+//    }
 
     /**
      * muestra las peliculas disnponibles en botones
      */
-    @Controller(events = {EventType.MESSAGE, EventType.POSTBACK}, pattern = "(?i:disponible)")
-    public void showMovies(Event event) {
-        // quick reply buttons
-        Button[] quickReplies = new Button[lstMovies.size()];
-        int i = 0;
-        for (Movie movie : lstMovies) {
-            quickReplies[i] = new Button().setContentType("text").setTitle(movie.getNombre()).setPayload("info " + movie.getNombre());
-            i++;
-
-        }
-
-        reply(event, new Message().setText("Peliculas disponibles").setQuickReplies(quickReplies));
-    }
+//    @Controller(events = {EventType.MESSAGE, EventType.POSTBACK}, pattern = "(?i:disponible)")
+//    public void showMovies(Event event) {
+//        // quick reply buttons
+//        Button[] quickReplies = new Button[lstMovies.size()];
+//        int i = 0;
+//        for (Movie movie : lstMovies) {
+//            quickReplies[i] = new Button().setContentType("text").setTitle(movie.getNombre()).setPayload("info " + movie.getNombre());
+//            i++;
+//
+//        }
+//
+//        reply(event, new Message().setText("Peliculas disponibles").setQuickReplies(quickReplies));
+//    }
 
     /**
      * Mostar la mejor pelicula
      */
-    @Controller(events = EventType.MESSAGE, pattern = "(mejor)")
-    public void showBestMovie(Event event) {
-
-        double max = lstMovies.get(0).getCalificacion();
-        int id = 0, i = 0;
-        for (Movie movie : lstMovies) {
-            if (movie.getCalificacion() > max) {
-                id = i;
-                max = movie.getCalificacion();
-            }
-            i++;
-        }
-        reply(event, "Pelicula con mejor calificacion: \n" + lstMovies.get(id).getNombre());
-    }
+//    @Controller(events = EventType.MESSAGE, pattern = "(mejor)")
+//    public void showBestMovie(Event event) {
+//
+//        double max = lstMovies.get(0).getCalificacion();
+//        int id = 0, i = 0;
+//        for (Movie movie : lstMovies) {
+//            if (movie.getCalificacion() > max) {
+//                id = i;
+//                max = movie.getCalificacion();
+//            }
+//            i++;
+//        }
+//        reply(event, "Pelicula con mejor calificacion: \n" + lstMovies.get(id).getNombre());
+//    }
 
     /**
      * Mostrar ayuda
@@ -171,19 +238,19 @@ public class FbBot extends Bot {
      *
      * @param event
      */
-    @Controller(events = EventType.QUICK_REPLY, pattern = "(si|no)")
-    public void onReceiveQuickReply(Event event) {
-        if ("si".equals(event.getMessage().getQuickReply().getPayload())) {
-
-            for (Movie movie : lstMovies) {
-                String movieTitle = movie.getNombre();
-                reply(event, movieTitle);
-            }
-
-        } else {
-            reply(event, "Hasta luego");
-        }
-    }
+//    @Controller(events = EventType.QUICK_REPLY, pattern = "(si|no)")
+//    public void onReceiveQuickReply(Event event) {
+//        if ("si".equals(event.getMessage().getQuickReply().getPayload())) {
+//
+//            for (Movie movie : lstMovies) {
+//                String movieTitle = movie.getNombre();
+//                reply(event, movieTitle);
+//            }
+//
+//        } else {
+//            reply(event, "Hasta luego");
+//        }
+//    }
 
     /**
      * This method is invoked when the user types "Show Buttons" or something which has "button" in it as defined
@@ -220,36 +287,36 @@ public class FbBot extends Bot {
      *
      * @param event
      */
-    @Controller(events = EventType.MESSAGE, pattern = "(?i:list)")
-    public void showList(Event event) {
-        int i = 0;
-        Element[] elements = new Element[lstMovies.size()];
-//        {
-//                new Element().setTitle("AnimateScroll").setSubtitle("A jQuery Plugin for Animating Scroll.")
-//                        .setImageUrl("https://plugins.compzets.com/images/as-logo.png")
-//                        .setDefaultAction(new Button().setType("web_url").setMessengerExtensions(true)
-//                        .setUrl("https://plugins.compzets.com/animatescroll/")),
-//                new Element().setTitle("Windows on Top").setSubtitle("Keeps a specific Window on Top of all others.")
-//                        .setImageUrl("https://plugins.compzets.com/images/compzets-logo.png")
-//                        .setDefaultAction(new Button().setType("web_url").setMessengerExtensions(true)
-//                        .setUrl("https://www.compzets.com/view-upload.php?id=702&action=view")),
-//                new Element().setTitle("SimpleFill").setSubtitle("Simplest form filler ever.")
-//                        .setImageUrl("https://plugins.compzets.com/simplefill/chrome-extension/icon-64.png")
-//                        .setDefaultAction(new Button().setType("web_url").setMessengerExtensions(true)
-//                        .setUrl("https://plugins.compzets.com/simplefill/"))
-//        };
-        for (Movie movie : lstMovies) {
-
-            elements[i] = new Element().setTitle(movie.getNombre()).setSubtitle(String.valueOf(movie.getCalificacion()))
-                    .setImageUrl(movie.getImg())
-                    .setDefaultAction(new Button().setType("web_url").setMessengerExtensions(true)
-                            .setUrl(movie.getUrl()));
-            i++;
-        }
-
-        reply(event, new Message().setAttachment(new Attachment().setType("template").setPayload(new Payload()
-                .setTemplateType("list").setElements(elements))));
-    }
+//    @Controller(events = EventType.MESSAGE, pattern = "(?i:list)")
+//    public void showList(Event event) {
+//        int i = 0;
+//        Element[] elements = new Element[lstMovies.size()];
+////        {
+////                new Element().setTitle("AnimateScroll").setSubtitle("A jQuery Plugin for Animating Scroll.")
+////                        .setImageUrl("https://plugins.compzets.com/images/as-logo.png")
+////                        .setDefaultAction(new Button().setType("web_url").setMessengerExtensions(true)
+////                        .setUrl("https://plugins.compzets.com/animatescroll/")),
+////                new Element().setTitle("Windows on Top").setSubtitle("Keeps a specific Window on Top of all others.")
+////                        .setImageUrl("https://plugins.compzets.com/images/compzets-logo.png")
+////                        .setDefaultAction(new Button().setType("web_url").setMessengerExtensions(true)
+////                        .setUrl("https://www.compzets.com/view-upload.php?id=702&action=view")),
+////                new Element().setTitle("SimpleFill").setSubtitle("Simplest form filler ever.")
+////                        .setImageUrl("https://plugins.compzets.com/simplefill/chrome-extension/icon-64.png")
+////                        .setDefaultAction(new Button().setType("web_url").setMessengerExtensions(true)
+////                        .setUrl("https://plugins.compzets.com/simplefill/"))
+////        };
+//        for (Movie movie : lstMovies) {
+//
+//            elements[i] = new Element().setTitle(movie.getNombre()).setSubtitle(String.valueOf(movie.getCalificacion()))
+//                    .setImageUrl(movie.getImg())
+//                    .setDefaultAction(new Button().setType("web_url").setMessengerExtensions(true)
+//                            .setUrl(movie.getUrl()));
+//            i++;
+//        }
+//
+//        reply(event, new Message().setAttachment(new Attachment().setType("template").setPayload(new Payload()
+//                .setTemplateType("list").setElements(elements))));
+//    }
 
     /**
      * Show the github project url when the user says bye.
@@ -274,55 +341,55 @@ public class FbBot extends Bot {
      *
      * @param event
      */
-    @Controller(pattern = "(?i)(setup meeting)", next = "confirmTiming")
-    public void setupMeeting(Event event) {
-        startConversation(event, "confirmTiming");   // start conversation
-        reply(event, "Cool! At what time (ex. 15:30) do you want me to set up the meeting?");
-    }
-
-    /**
-     * This method will be invoked after {@link FbBot#setupMeeting(Event)}. You need to
-     * call {@link Bot#nextConversation(Event)} to jump to the next question in the conversation.
-     *
-     * @param event
-     */
-    @Controller(next = "askTimeForMeeting")
-    public void confirmTiming(Event event) {
-        reply(event, "Your meeting is set at " + event.getMessage().getText() +
-                ". Would you like to repeat it tomorrow?");
-        nextConversation(event);    // jump to next question in conversation
-    }
-
-    /**
-     * This method will be invoked after {@link FbBot#confirmTiming(Event)}. You can
-     * call {@link Bot#stopConversation(Event)} to end the conversation.
-     *
-     * @param event
-     */
-    @Controller(next = "askWhetherToRepeat")
-    public void askTimeForMeeting(Event event) {
-        if (event.getMessage().getText().contains("yes")) {
-            reply(event, "Okay. Would you like me to set a reminder for you?");
-            nextConversation(event);    // jump to next question in conversation
-        } else {
-            reply(event, "No problem. You can always schedule one with 'setup meeting' command.");
-            stopConversation(event);    // stop conversation only if user says no
-        }
-    }
-
-    /**
-     * This method will be invoked after {@link FbBot#askTimeForMeeting(Event)}. You can
-     * call {@link Bot#stopConversation(Event)} to end the conversation.
-     *
-     * @param event
-     */
-    @Controller
-    public void askWhetherToRepeat(Event event) {
-        if (event.getMessage().getText().contains("yes")) {
-            reply(event, "Great! I will remind you tomorrow before the meeting.");
-        } else {
-            reply(event, "Okay, don't forget to attend the meeting tomorrow :)");
-        }
-        stopConversation(event);    // stop conversation
-    }
+//    @Controller(pattern = "(?i)(setup meeting)", next = "confirmTiming")
+//    public void setupMeeting(Event event) {
+//        startConversation(event, "confirmTiming");   // start conversation
+//        reply(event, "Cool! At what time (ex. 15:30) do you want me to set up the meeting?");
+//    }
+//
+//    /**
+//     * This method will be invoked after {@link FbBot#setupMeeting(Event)}. You need to
+//     * call {@link Bot#nextConversation(Event)} to jump to the next question in the conversation.
+//     *
+//     * @param event
+//     */
+//    @Controller(next = "askTimeForMeeting")
+//    public void confirmTiming(Event event) {
+//        reply(event, "Your meeting is set at " + event.getMessage().getText() +
+//                ". Would you like to repeat it tomorrow?");
+//        nextConversation(event);    // jump to next question in conversation
+//    }
+//
+//    /**
+//     * This method will be invoked after {@link FbBot#confirmTiming(Event)}. You can
+//     * call {@link Bot#stopConversation(Event)} to end the conversation.
+//     *
+//     * @param event
+//     */
+//    @Controller(next = "askWhetherToRepeat")
+//    public void askTimeForMeeting(Event event) {
+//        if (event.getMessage().getText().contains("yes")) {
+//            reply(event, "Okay. Would you like me to set a reminder for you?");
+//            nextConversation(event);    // jump to next question in conversation
+//        } else {
+//            reply(event, "No problem. You can always schedule one with 'setup meeting' command.");
+//            stopConversation(event);    // stop conversation only if user says no
+//        }
+//    }
+//
+//    /**
+//     * This method will be invoked after {@link FbBot#askTimeForMeeting(Event)}. You can
+//     * call {@link Bot#stopConversation(Event)} to end the conversation.
+//     *
+//     * @param event
+//     */
+//    @Controller
+//    public void askWhetherToRepeat(Event event) {
+//        if (event.getMessage().getText().contains("yes")) {
+//            reply(event, "Great! I will remind you tomorrow before the meeting.");
+//        } else {
+//            reply(event, "Okay, don't forget to attend the meeting tomorrow :)");
+//        }
+//        stopConversation(event);    // stop conversation
+//    }
 }
