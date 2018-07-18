@@ -16,6 +16,15 @@ public class Util {
         quickReplies[8] = new Button().setContentType("text").setTitle("Mas cursos").setPayload(base + cont);
         return quickReplies;
     }
+    public static Button[] displayComandos() {
+        String botones[] = {"Cursos","Info","Pre","Fechas","Duracion"};
+        Button[] quickReplies = new Button[botones.length];
+        for (int i = 0; i < botones.length; i++) {
+            quickReplies[i] = new Button().setContentType("text").setTitle(botones[i]).setPayload(
+                    botones[i].toLowerCase());
+        }
+        return quickReplies;
+    }
 
     public static String cleanData(String data) {
         String articles[] = {"EL", "Y", "LA", "LOS", "TU", "LAS", "DE", "PARA", "ELLOS", "DE", "DEL", "UNA", "A", "TU"};
@@ -23,7 +32,6 @@ public class Util {
         String cleanData = "";
         data = StringUtils.stripAccents(data);
         data = data.toUpperCase();
-
         for (int i = 0; i < data.length(); i++) {
             Boolean clean = true;
             for (int j = 0; j < special.length; j++) {
@@ -33,11 +41,12 @@ public class Util {
                 }
             }
             if (clean){
-                System.out.println(cleanData);
+                cleanData = cleanData + data.charAt(i);
             }
         }
         String finalData = "";
         String words[] = cleanData.split(" ");
+        int cont = 0;
         for (String word : words) {
             Boolean clean = true;
             for (String article : articles) {
@@ -47,7 +56,12 @@ public class Util {
                 }
             }
             if (clean) {
-                finalData = finalData + " " + word;
+                if (cont==0){
+                    finalData = word;
+                }else{
+                    finalData = finalData + " " + word;
+                }
+                  cont++;
             }
         }
         return finalData;

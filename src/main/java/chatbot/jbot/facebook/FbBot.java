@@ -2,17 +2,14 @@ package chatbot.jbot.facebook;
 
 
 import chatbot.jbot.BL.BL_Curso;
-import chatbot.jbot.DC.DC_Curso;
 import chatbot.jbot.JBotApplication;
 import chatbot.jbot.Util;
-import chatbot.jbot.model.Movie;
 import me.ramswaroop.jbot.core.common.Controller;
 import me.ramswaroop.jbot.core.common.EventType;
 import me.ramswaroop.jbot.core.common.JBot;
 import me.ramswaroop.jbot.core.facebook.Bot;
 import me.ramswaroop.jbot.core.facebook.models.Attachment;
 import me.ramswaroop.jbot.core.facebook.models.Button;
-import me.ramswaroop.jbot.core.facebook.models.Element;
 import me.ramswaroop.jbot.core.facebook.models.Event;
 import me.ramswaroop.jbot.core.facebook.models.Message;
 import me.ramswaroop.jbot.core.facebook.models.Payload;
@@ -21,10 +18,13 @@ import org.springframework.context.annotation.Profile;
 
 import javax.annotation.PostConstruct;
 
-import chatbot.jbot.moviesHandler;
 
 import java.sql.Connection;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Map;
 
 /**
  * Chatbot diseñado para resolver dudas acerca de la plataforma
@@ -71,14 +71,25 @@ public class FbBot extends Bot {
      * webhook.
      */
     @PostConstruct
+//    @Controller(next = "showMenu")
     public void init() {
-        setGetStartedButton("menu");
+        setGetStartedButton("Empezar");
         setGreetingText(new Payload[]{new Payload().setLocale("default").setText("OC-Chatbot para resolver dudas de Open" +
                 " Campus y sus diferentes cursos. Ingresa menu para ver lo que puedo hacer")});
     }
 
+    /*
+    Desplegar menu
+     */
+    @Controller(events = {EventType.MESSAGE, EventType.QUICK_REPLY, EventType.POSTBACK}, pattern = "^(menu|Menu)$")
+    public void showMenu(Event event) {
+        reply(event, new Message().setText("Comandos disponibles:").setQuickReplies(Util.displayComandos()));
+    }
 
-    @Controller(events = EventType.MESSAGE, pattern = "^(cursos|Cursos)$")
+    /*
+    Muestra los cursos disponibles
+     */
+    @Controller(events = {EventType.MESSAGE, EventType.QUICK_REPLY}, pattern = "^(cursos|Cursos)$")
     public void showAllCursos(Event event) {
 //        TODO display as buttons.
         reply(event, "Los cursos disponibles son:");
@@ -87,73 +98,442 @@ public class FbBot extends Bot {
         for (String curso : cursos) {
             response = response + curso + "\n";
         }
+//        Button[] buttons = new Button[3];
+//        for (int i = 0; i<=3;i++ ) {
+//            buttons[i] = new Button().setType("web_url").setUrl("https://github.com/astandre").setTitle(cursos.get(i));
+//            i++;
+//        }
+//        reply(event, new Message().setAttachment(new Attachment().setType("template").setPayload(new Payload()
+//                .setTemplateType("button").setText("Cursos disponibles").setButtons(buttons))));
         reply(event, response);
     }
 
+    /*
+    Comando informacion
+     */
     @Controller(events = {EventType.MESSAGE, EventType.QUICK_REPLY}, pattern = "^(info|Info)")
     public void info(Event event) {
         Connection cn = JBotApplication.getConnection();
         ArrayList<String> cursos = BL_Curso.getCursos(cn);
-//        Button[] quickReplies = new Button[9];
         if (event.getType() == EventType.MESSAGE) {
             System.out.println(String.format("Text: %s", event.getMessage().getText()));
             String message = event.getMessage().getText();
             if (message.length() == 4) {
-                Button[] quickReplies = Util.displayCursoOptions(cursos,0,"info","1");
+                Button[] quickReplies = Util.displayCursoOptions(cursos, 0, "info", "1");
                 reply(event, new Message().setText("Que curso te gustaria conocer?").setQuickReplies(quickReplies));
-            }else{
-                String curso = message.substring(5,message.length());
-                String resp = BL_Curso.getCursoInfo(cn,Util.cleanData(curso));
-                if (!resp.equals("0")){
+            } else {
+                String curso = message.substring(5, message.length());
+                String resp = BL_Curso.getCursoInfo(cn, Util.cleanData(curso));
+                if (resp != null) {
                     reply(event, new Message().setText(resp));
-                }else{
-                    reply(event, new Message().setText("No se ha encontrado el curso "+curso));
+                } else {
+                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + "Revisa nuestros comandos " +
+                            "disponibles").setQuickReplies(Util.displayComandos()));
                 }
             }
         } else {
             System.out.println(String.format("Payload: %s", event.getMessage().getQuickReply().getPayload()));
             String message = event.getMessage().getQuickReply().getPayload();
             if (message.equals("info")) {
-                Button[] quickReplies = Util.displayCursoOptions(cursos,0,"info","1");
+                Button[] quickReplies = Util.displayCursoOptions(cursos, 0, "info", "1");
                 reply(event, new Message().setText("Que curso te gustaria conocer?").setQuickReplies(quickReplies));
             }
             if (message.equals("info1")) {
-                Button[] quickReplies = Util.displayCursoOptions(cursos,8,"info","2");
+                Button[] quickReplies = Util.displayCursoOptions(cursos, 8, "info", "2");
                 reply(event, new Message().setText("Desplegando más cursos\nQue curso te gustaria conocer?")
                         .setQuickReplies(quickReplies));
             }
             if (message.equals("info2")) {
-                Button[] quickReplies = Util.displayCursoOptions(cursos,16,"info","");
+                Button[] quickReplies = Util.displayCursoOptions(cursos, 16, "info", "");
                 reply(event, new Message().setText("Desplegando cursos\nQue curso te gustaria conocer?")
                         .setQuickReplies(quickReplies));
             }
-            if (message.length()>5){
-                String curso = message.substring(5,message.length());
-                String resp = BL_Curso.getCursoInfo(cn,Util.cleanData(curso));
-                if (!resp.equals("0")){
+            if (message.length() > 5) {
+                String curso = message.substring(5, message.length());
+                String resp = BL_Curso.getCursoInfo(cn, Util.cleanData(curso));
+                if (resp != null) {
                     reply(event, new Message().setText(resp));
-                }else{
-                    reply(event, new Message().setText("No se ha encontrado el curso "+curso));
+                } else {
+                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + "Revisa nuestros comandos " +
+                            "disponibles").setQuickReplies(Util.displayComandos()));
                 }
             }
         }
     }
 
-    @Controller(events = {EventType.MESSAGE, EventType.POSTBACK}, pattern = "^(menu|Menu)$")
-    public void showMenu(Event event) {
-        // quick reply buttons
-        String comandos []= {"Info","Pre","Fechas"};
-        Button[] quickReplies = new Button[comandos.length];
-        int i = 0;
-        for (String comando : comandos) {
-            quickReplies[i] = new Button().setContentType("text").setTitle(comando).setPayload(comando.toLowerCase());
-            i++;
-
+    /**
+     * Comando prerequisitos
+     */
+    @Controller(events = {EventType.MESSAGE, EventType.QUICK_REPLY}, pattern = "^(pre|Pre)")
+    public void prerequisitos(Event event) {
+        Connection cn = JBotApplication.getConnection();
+        ArrayList<String> cursos = BL_Curso.getCursos(cn);
+        if (event.getType() == EventType.MESSAGE) {
+            System.out.println(String.format("Text: %s", event.getMessage().getText()));
+            String message = event.getMessage().getText();
+            if (message.length() == 3) {
+                Button[] quickReplies = Util.displayCursoOptions(cursos, 0, "pre", "1");
+                reply(event, new Message().setText("Que curso te gustaria conocer?").setQuickReplies(quickReplies));
+            } else {
+                String curso = message.substring(4, message.length());
+                String resp[] = BL_Curso.getCursoPrerequisito(cn, Util.cleanData(curso));
+                if (resp != null) {
+                    if (resp[0].equals("Ninguno")) {
+                        String full_response = "No es necesario ningun PREREQUISITO para el curso ";
+                        reply(event, new Message().setText(full_response));
+                    } else {
+                        String full_response = "Los PREREQUISITOS para el curso " + resp[0] + " son: " + resp[
+                                1];
+                        reply(event, new Message().setText(full_response));
+                    }
+                } else {
+                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + "Revisa nuestros comandos " +
+                            "disponibles").setQuickReplies(Util.displayComandos()));
+                }
+            }
+        } else {
+            System.out.println(String.format("Payload: %s", event.getMessage().getQuickReply().getPayload()));
+            String message = event.getMessage().getQuickReply().getPayload();
+            if (message.equals("pre")) {
+                Button[] quickReplies = Util.displayCursoOptions(cursos, 0, "pre", "1");
+                reply(event, new Message().setText("Que curso te gustaria conocer?").setQuickReplies(quickReplies));
+            }
+            if (message.equals("pre1")) {
+                Button[] quickReplies = Util.displayCursoOptions(cursos, 8, "pre", "2");
+                reply(event, new Message().setText("Desplegando más cursos\nQue curso te gustaria conocer?")
+                        .setQuickReplies(quickReplies));
+            }
+            if (message.equals("pre2")) {
+                Button[] quickReplies = Util.displayCursoOptions(cursos, 16, "pre", "");
+                reply(event, new Message().setText("Desplegando cursos\nQue curso te gustaria conocer?")
+                        .setQuickReplies(quickReplies));
+            }
+            if (message.length() > 4) {
+                String curso = message.substring(4, message.length());
+                String resp[] = BL_Curso.getCursoPrerequisito(cn, Util.cleanData(curso));
+                if (resp != null) {
+                    if (resp[0].equals("Ninguno")) {
+                        String full_response = "No es necesario ningun *PREREQUISITO* para el curso ";
+                        reply(event, new Message().setText(full_response));
+                    } else {
+                        String full_response = "Los PREREQUISITOS para el curso " + resp[0] + " son: " + resp[
+                                1];
+                        reply(event, new Message().setText(full_response));
+                    }
+                } else {
+                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + "Revisa nuestros comandos " +
+                            "disponibles").setQuickReplies(Util.displayComandos()));
+                }
+            }
         }
-
-        reply(event, new Message().setText("Comandos disponibles:").setQuickReplies(quickReplies));
     }
 
+    /**
+     * Comando Fechas
+     */
+    @Controller(events = {EventType.MESSAGE, EventType.QUICK_REPLY}, pattern = "^(fechas|Fechas)")
+    public void fechas(Event event) {
+        Connection cn = JBotApplication.getConnection();
+        ArrayList<String> cursos = BL_Curso.getCursos(cn);
+        if (event.getType() == EventType.MESSAGE) {
+            System.out.println(String.format("Text: %s", event.getMessage().getText()));
+            String message = event.getMessage().getText();
+            if (message.length() == 6) {
+                Button[] quickReplies = Util.displayCursoOptions(cursos, 0, "fechas", "1");
+                reply(event, new Message().setText("Que curso te gustaria conocer?").setQuickReplies(quickReplies));
+            } else {
+                String curso = message.substring(7, message.length());
+                String resp[] = BL_Curso.getCursoFechas(cn, Util.cleanData(curso));
+                if (resp != null) {
+                    Date fecha_inicio = null, fecha_fin = null;
+                    try {
+                        fecha_inicio = new SimpleDateFormat("dd-MM-yyyy").parse(resp[1]);
+                        fecha_fin = new SimpleDateFormat("dd-MM-yyyy").parse(resp[2]);
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+                    String full_response = "La inscripcion al curso " + resp[0] + " comienza el dia " +
+                            new SimpleDateFormat("dd-MM-YYY").format(fecha_inicio)
+                            + " y el inicio de actividades es el dia " +
+                            new SimpleDateFormat("dd-MM-YYY").format(fecha_fin);
+                    reply(event, new Message().setText(full_response));
+                } else {
+                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + "Revisa nuestros comandos " +
+                            "disponibles").setQuickReplies(Util.displayComandos()));
+                }
+            }
+        } else {
+            System.out.println(String.format("Payload: %s", event.getMessage().getQuickReply().getPayload()));
+            String message = event.getMessage().getQuickReply().getPayload();
+            if (message.equals("fechas")) {
+                Button[] quickReplies = Util.displayCursoOptions(cursos, 0, "fechas", "1");
+                reply(event, new Message().setText("Que curso te gustaria conocer?").setQuickReplies(quickReplies));
+            }
+            if (message.equals("fechas1")) {
+                Button[] quickReplies = Util.displayCursoOptions(cursos, 8, "fechas", "2");
+                reply(event, new Message().setText("Desplegando más cursos\nQue curso te gustaria conocer?")
+                        .setQuickReplies(quickReplies));
+            }
+            if (message.equals("fechas2")) {
+                Button[] quickReplies = Util.displayCursoOptions(cursos, 16, "fechas", "");
+                reply(event, new Message().setText("Desplegando cursos\nQue curso te gustaria conocer?")
+                        .setQuickReplies(quickReplies));
+            }
+            if (message.length() > 6) {
+                String curso = message.substring(7, message.length());
+                String resp[] = BL_Curso.getCursoFechas(cn, Util.cleanData(curso));
+                if (resp != null) {
+                    Date fecha_inicio = null, fecha_fin = null;
+                    try {
+                        fecha_inicio = new SimpleDateFormat("dd-MM-yyyy").parse(resp[1]);
+                        fecha_fin = new SimpleDateFormat("dd-MM-yyyy").parse(resp[2]);
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+                    String full_response = "La inscripcion al curso " + resp[0] + " comienza el dia " +
+                            new SimpleDateFormat("dd-MM-YYY").format(fecha_inicio)
+                            + " y el inicio de actividades es el dia " +
+                            new SimpleDateFormat("dd-MM-YYY").format(fecha_fin);
+                    reply(event, new Message().setText(full_response));
+                } else {
+                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + "Revisa nuestros comandos " +
+                            "disponibles").setQuickReplies(Util.displayComandos()));
+                }
+            }
+        }
+    }
+
+    /**
+     * Comando duracion
+     */
+    @Controller(events = {EventType.MESSAGE, EventType.QUICK_REPLY}, pattern = "^(duracion|Duracion)")
+    public void duracion(Event event) {
+        Connection cn = JBotApplication.getConnection();
+        ArrayList<String> cursos = BL_Curso.getCursos(cn);
+        if (event.getType() == EventType.MESSAGE) {
+            System.out.println(String.format("Text: %s", event.getMessage().getText()));
+            String message = event.getMessage().getText();
+            if (message.length() == 8) {
+                Button[] quickReplies = Util.displayCursoOptions(cursos, 0, "duracion", "1");
+                reply(event, new Message().setText("Que curso te gustaria conocer?").setQuickReplies(quickReplies));
+            } else {
+                String curso = message.substring(9, message.length());
+                String resp[] = BL_Curso.getCursoDuracion(cn, Util.cleanData(curso));
+                if (resp != null) {
+                    String full_response = "El curso " + resp[0] + " tiene una DURACION de " + resp[1] +
+                            " semanas, con un esfuerzo estimado de " + resp[2] + " horas por semana";
+                    reply(event, new Message().setText(full_response));
+                } else {
+                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + "Revisa nuestros comandos " +
+                            "disponibles").setQuickReplies(Util.displayComandos()));
+                }
+            }
+        } else {
+            System.out.println(String.format("Payload: %s", event.getMessage().getQuickReply().getPayload()));
+            String message = event.getMessage().getQuickReply().getPayload();
+            if (message.equals("duracion")) {
+                Button[] quickReplies = Util.displayCursoOptions(cursos, 0, "duracion", "1");
+                reply(event, new Message().setText("Que curso te gustaria conocer?").setQuickReplies(quickReplies));
+            }
+            if (message.equals("duracion1")) {
+                Button[] quickReplies = Util.displayCursoOptions(cursos, 8, "duracion", "2");
+                reply(event, new Message().setText("Desplegando más cursos\nQue curso te gustaria conocer?")
+                        .setQuickReplies(quickReplies));
+            }
+            if (message.equals("duracion2")) {
+                Button[] quickReplies = Util.displayCursoOptions(cursos, 16, "duracion", "");
+                reply(event, new Message().setText("Desplegando cursos\nQue curso te gustaria conocer?")
+                        .setQuickReplies(quickReplies));
+            }
+            if (message.length() > 8) {
+                String curso = message.substring(9, message.length());
+                String resp[] = BL_Curso.getCursoDuracion(cn, Util.cleanData(curso));
+                if (resp != null) {
+                    String full_response = "El curso " + resp[0] + " tiene una DURACION de " + resp[1] +
+                            " semanas, con un esfuerzo estimado de " + resp[2] + " horas por semana";
+                    reply(event, new Message().setText(full_response));
+                } else {
+                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + "Revisa nuestros comandos " +
+                            "disponibles").setQuickReplies(Util.displayComandos()));
+                }
+            }
+        }
+    }
+
+    /**
+     * Comando docentes
+     */
+    @Controller(events = {EventType.MESSAGE, EventType.QUICK_REPLY}, pattern = "^(docentes|Docentes)")
+    public void docentes(Event event) {
+        Connection cn = JBotApplication.getConnection();
+        ArrayList<String> cursos = BL_Curso.getCursos(cn);
+        if (event.getType() == EventType.MESSAGE) {
+            System.out.println(String.format("Text: %s", event.getMessage().getText()));
+            String message = event.getMessage().getText();
+            if (message.length() == 8) {
+                Button[] quickReplies = Util.displayCursoOptions(cursos, 0, "docentes", "1");
+                reply(event, new Message().setText("Que curso te gustaria conocer?").setQuickReplies(quickReplies));
+            } else {
+                String curso = message.substring(9, message.length());
+                Map<Integer, String[]> resp = BL_Curso.getCursoProfesor(cn, Util.cleanData(curso));
+                String full_response;
+                if (resp != null) {
+                    if (resp.size() >= 2) {
+                        full_response = "Los docentes encargados son ";
+                        for (Map.Entry<Integer, String[]> entry : resp.entrySet()) {
+                            if (entry.getValue()[2].length() > 0) {
+                                full_response = full_response + entry.getValue()[0] + " (" + entry.getValue()[1] + ") " + entry.getValue()[2] + " ";
+                            } else {
+                                full_response = full_response + entry.getValue()[0] + " (" + entry.getValue()[1] + ") ";
+                            }
+                        }
+                    } else {
+                        if (resp.get(0)[2].length() > 0) {
+                            full_response = "El docente encargado es " + resp.get(0)[0] + " (" + resp.get(0)[1] + ") ";
+                        } else {
+                            full_response = "El docente encargado es " + resp.get(0)[0] + " (" + resp.get(0)[1] + ") " + resp.get(0)[2];
+                        }
+                    }
+                    reply(event, new Message().setText(full_response));
+                } else {
+                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + "Revisa nuestros comandos " +
+                            "disponibles").setQuickReplies(Util.displayComandos()));
+                }
+            }
+        } else {
+            System.out.println(String.format("Payload: %s", event.getMessage().getQuickReply().getPayload()));
+            String message = event.getMessage().getQuickReply().getPayload();
+            if (message.equals("docentes")) {
+                Button[] quickReplies = Util.displayCursoOptions(cursos, 0, "docentes", "1");
+                reply(event, new Message().setText("Que curso te gustaria conocer?").setQuickReplies(quickReplies));
+            }
+            if (message.equals("docentes1")) {
+                Button[] quickReplies = Util.displayCursoOptions(cursos, 8, "docentes", "2");
+                reply(event, new Message().setText("Desplegando más cursos\nQue curso te gustaria conocer?")
+                        .setQuickReplies(quickReplies));
+            }
+            if (message.equals("docentes2")) {
+                Button[] quickReplies = Util.displayCursoOptions(cursos, 16, "docentes", "");
+                reply(event, new Message().setText("Desplegando cursos\nQue curso te gustaria conocer?")
+                        .setQuickReplies(quickReplies));
+            }
+            if (message.length() > 8) {
+                String curso = message.substring(9, message.length());
+                Map<Integer, String[]> resp = BL_Curso.getCursoProfesor(cn, Util.cleanData(curso));
+                String full_response;
+                if (resp != null) {
+                    if (resp.size() >= 2) {
+                        full_response = "Los docentes encargados son ";
+                        for (Map.Entry<Integer, String[]> entry : resp.entrySet()) {
+                            if (entry.getValue()[2].length() > 0) {
+                                full_response = full_response + entry.getValue()[0] + " (" + entry.getValue()[1] + ") " + entry.getValue()[2] + " ";
+                            } else {
+                                full_response = full_response + entry.getValue()[0] + " (" + entry.getValue()[1] + ") ";
+                            }
+                        }
+                    } else {
+                        if (resp.get(0)[2].length() > 0) {
+                            full_response = "El docente encargado es " + resp.get(0)[0] + " (" + resp.get(0)[1] + ") ";
+                        } else {
+                            full_response = "El docente encargado es " + resp.get(0)[0] + " (" + resp.get(0)[1] + ") " + resp.get(0)[2];
+                        }
+                    }
+                    reply(event, new Message().setText(full_response));
+                } else {
+                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + "Revisa nuestros comandos " +
+                            "disponibles").setQuickReplies(Util.displayComandos()));
+                }
+            }
+        }
+    }
+
+    /**
+     * Comando temas
+     */
+    @Controller(events = {EventType.MESSAGE, EventType.QUICK_REPLY}, pattern = "^(temas|Temas)")
+    public void temas(Event event) {
+        Connection cn = JBotApplication.getConnection();
+        ArrayList<String> cursos = BL_Curso.getCursos(cn);
+        if (event.getType() == EventType.MESSAGE) {
+            System.out.println(String.format("Text: %s", event.getMessage().getText()));
+            String message = event.getMessage().getText();
+            if (message.length() == 5) {
+                Button[] quickReplies = Util.displayCursoOptions(cursos, 0, "temas", "1");
+                reply(event, new Message().setText("Que curso te gustaria conocer?").setQuickReplies(quickReplies));
+            } else {
+                String curso = message.substring(6, message.length());
+                ArrayList<String> resp = BL_Curso.getCursoTemas(cn, Util.cleanData(curso));
+                String full_response;
+                if (resp != null) {
+                    int i = 0;
+                    full_response = "Los contenidos del curso " + resp.get(0) + " son: ";
+                    for (String tema : resp) {
+                        if (i >= 1) {
+                            if (i + 1 == resp.size()) {
+                                full_response = full_response + tema;
+                            }else{
+                                full_response = full_response + tema + ", ";
+                            }
+                        }
+                        i++;
+                    }
+                    reply(event, new Message().setText(full_response));
+                } else {
+                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + "Revisa nuestros comandos " +
+                            "disponibles").setQuickReplies(Util.displayComandos()));
+                }
+            }
+        } else {
+            System.out.println(String.format("Payload: %s", event.getMessage().getQuickReply().getPayload()));
+            String message = event.getMessage().getQuickReply().getPayload();
+            if (message.equals("temas")) {
+                Button[] quickReplies = Util.displayCursoOptions(cursos, 0, "temas", "1");
+                reply(event, new Message().setText("Que curso te gustaria conocer?").setQuickReplies(quickReplies));
+            }
+            if (message.equals("temas1")) {
+                Button[] quickReplies = Util.displayCursoOptions(cursos, 8, "temas", "2");
+                reply(event, new Message().setText("Desplegando más cursos\nQue curso te gustaria conocer?")
+                        .setQuickReplies(quickReplies));
+            }
+            if (message.equals("temas2")) {
+                Button[] quickReplies = Util.displayCursoOptions(cursos, 16, "temas", "");
+                reply(event, new Message().setText("Desplegando cursos\nQue curso te gustaria conocer?")
+                        .setQuickReplies(quickReplies));
+            }
+            if (message.length() > 5) {
+                String curso = message.substring(6, message.length());
+                ArrayList<String> resp = BL_Curso.getCursoTemas(cn, Util.cleanData(curso));
+                String full_response;
+                if (resp != null) {
+                    int i = 0;
+                    full_response = "Los contenidos del curso " + resp.get(0) + " son: ";
+                    for (String tema : resp) {
+                        if (i >= 1) {
+                            if (i + 1 == resp.size()) {
+                                full_response = full_response + tema;
+                            }else{
+                                full_response = full_response + tema + ", ";
+                            }
+                        }
+                        i++;
+                    }
+                    reply(event, new Message().setText(full_response));
+                } else {
+                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + "Revisa nuestros comandos " +
+                            "disponibles").setQuickReplies(Util.displayComandos()));
+                }
+            }
+        }
+
+    }
+
+
+    /**
+     *    @Controller(events = {EventType.MESSAGE, EventType.POSTBACK}, pattern = "^(menu|Menu)$")
+     *     public void showMenu(Event event) {
+     *         reply(event, new Message().setText("Comandos disponibles:").setQuickReplies(Util.displayComandos()));
+     *     }
+     */
     /**
      * This method gets invoked when a user clicks on the "Get Started" button or just when someone simply types
      * hi, hello or hey. When it is the former, the event type is {@code EventType.POSTBACK} with the payload "hi"
@@ -207,23 +587,6 @@ public class FbBot extends Bot {
 //        reply(event, new Message().setText("Peliculas disponibles").setQuickReplies(quickReplies));
 //    }
 
-    /**
-     * Mostar la mejor pelicula
-     */
-//    @Controller(events = EventType.MESSAGE, pattern = "(mejor)")
-//    public void showBestMovie(Event event) {
-//
-//        double max = lstMovies.get(0).getCalificacion();
-//        int id = 0, i = 0;
-//        for (Movie movie : lstMovies) {
-//            if (movie.getCalificacion() > max) {
-//                id = i;
-//                max = movie.getCalificacion();
-//            }
-//            i++;
-//        }
-//        reply(event, "Pelicula con mejor calificacion: \n" + lstMovies.get(id).getNombre());
-//    }
 
     /**
      * Mostrar ayuda

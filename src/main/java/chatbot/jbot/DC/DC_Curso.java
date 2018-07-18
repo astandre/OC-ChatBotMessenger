@@ -5,67 +5,195 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 
-public class DC_Curso{
+public class DC_Curso {
 
-//    public void connectDatabase() {
-//        try {
-//            // We register the MySQL (MariaDB) driver
-//            // Registramos el driver de MySQL (MariaDB)
-////            try {
-////                Class.forName("com.mariadb.jdbc.Driver");
-////
-////            } catch (ClassNotFoundException ex) {
-////                System.out.println("Error al registrar el driver de MySQL: " + ex);
-////            }
-//            Connection connection = null;
-//            // Database connect
-//            // Conectamos con la base de datos
-//            connection = DriverManager.getConnection(
-//                    "jdbc:mysql://localhost/ocdb",
-//                    "root", "");
-//            boolean valid = connection.isValid(50000);
-//            System.out.println(valid ? "TEST OK" : "TEST FAIL");
-//
-//        } catch (java.sql.SQLException sqle) {
-//            System.out.println("Error: " + sqle);
-//        }
-//    }
+    public static void main(String[] args) {
+        try {
+            Connection connection = DriverManager.getConnection(
+                    "jdbc:mysql://localhost/ocdb",
+                    "root", "");
+            boolean valid = connection.isValid(50000);
+            System.out.println(valid ? "TEST OK" : "TEST FAIL");
+            Map<Integer, String[]> profesores = getCursoProfesor(connection, 20);
+            for (Map.Entry<Integer, String[]> entry : profesores.entrySet()) {
+                System.out.println("clave=" + entry.getKey() + ", valor=" + Arrays.toString(entry.getValue()));
+            }
+        } catch (java.sql.SQLException sqle) {
+            System.out.println("Error: " + sqle);
+        }
+    }
 
-    public static ArrayList<String> getCursos(Connection connection){
+
+    public static ArrayList<String> getCursos(Connection connection) {
         String query = "select nombre from curso";
         ArrayList<String> cursos = new ArrayList<>();
-        try
-        {
+        try {
             Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery(query);
-            while (rs.next()){
+            while (rs.next()) {
                 cursos.add(rs.getString("nombre"));
 
             }
 //            connection.close();
 //            System.out.println("Disconnected from database");
 
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return cursos;
     }
-    public static String getCursoInfo(Connection cn, int id){
+
+    public static String getCursoInfo(Connection cn, int id) {
         String query = "SELECT descripcion,nombre,link FROM curso WHERE id_curso = " + String.valueOf(id);
-        try
-        {
+        String resp = null;
+        try {
             Statement stmt = cn.createStatement();
             ResultSet rs = stmt.executeQuery(query);
             if (rs.next()) {
-                return rs.getString("descripcion");
+                resp = rs.getString("descripcion");
             }
-                return "0";
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
-            return "0";
+        }
+        return resp;
+    }
+
+    public static String[] getCursoPreRequisitos(Connection cn, int id) {
+        String query = "SELECT pre_requisito,nombre FROM curso WHERE id_curso =" + String.valueOf(id) + " and archivado = 0";
+        String result[] = new String[2];
+        try {
+            Statement stmt = cn.createStatement();
+            ResultSet rs = stmt.executeQuery(query);
+            if (rs.next()) {
+                result[0] = rs.getString("nombre");
+                result[1] = rs.getString("pre_requisito");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    public static String[] getCursoFechas(Connection cn, int id) {
+        String query = "SELECT fecha_inscripcion, fecha_inicio,nombre FROM curso WHERE id_curso = " + String.valueOf(id);
+        String result[] = new String[3];
+        try {
+            Statement stmt = cn.createStatement();
+            ResultSet rs = stmt.executeQuery(query);
+            if (rs.next()) {
+                result[0] = rs.getString("nombre");
+                result[1] = rs.getString("fecha_inscripcion");
+                result[2] = rs.getString("fecha_inicio");
+            }
+            return result;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return result;
         }
 
     }
+
+    public static Map<Integer, String[]> getCursoProfesor(Connection cn, int id) {
+        String query = "SELECT nombre, email, twitter fROM docente INNER JOIN docente_curso curso ON docente.id_docente = curso.id_docente_curso WHERE  id_curso = " + String.valueOf(id);
+        Map<Integer, String[]> result = new HashMap<>();
+        try {
+            Statement stmt = cn.createStatement();
+            ResultSet rs = stmt.executeQuery(query);
+            int i = 0;
+            while (rs.next()) {
+                result.put(i, new String[]{rs.getString("nombre"), rs.getString("email"), rs.getString("twitter")});
+                i++;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    public static String[] getCursoDuracion(Connection cn, int id) {
+        String query = "SELECT nombre, esfuerzo_est,duracion FROM curso WHERE id_curso = " + String.valueOf(id);
+        String result[] = new String[3];
+        try {
+            Statement stmt = cn.createStatement();
+            ResultSet rs = stmt.executeQuery(query);
+            if (rs.next()) {
+                result[0] = rs.getString("nombre");
+                result[1] = rs.getString("esfuerzo_est");
+                result[2] = rs.getString("duracion");
+            }
+            return result;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return result;
+        }
+    }
+
+    public static ArrayList<String> getCursoTemas(Connection cn, int id) {
+        String query = "SELECT c.nombre, contenido FROM contenido INNER JOIN curso c ON contenido.id_curso_cont = " +
+                "c.id_curso  where id_curso = " + String.valueOf(id);
+        ArrayList<String> result = new ArrayList<>();
+        try {
+            Statement stmt = cn.createStatement();
+            ResultSet rs = stmt.executeQuery(query);
+            int i = 0;
+            while (rs.next()) {
+                if (i == 0) {
+                    result.add(rs.getString("nombre"));
+                } else {
+                    result.add(rs.getString("contenido"));
+                }
+                i++;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    public static ArrayList<String> getCursoCompetencias(Connection cn, int id) {
+        String query = "select c.nombre, competencia from competencias inner join curso c on competencias.id_curso_comp" +
+                " = c.id_curso  where id_curso = " + String.valueOf(id);
+        ArrayList<String> result = new ArrayList<>();
+        try {
+            Statement stmt = cn.createStatement();
+            ResultSet rs = stmt.executeQuery(query);
+            int i = 0;
+            while (rs.next()) {
+                if (i == 0) {
+                    result.add(rs.getString("nombre"));
+                } else {
+                    result.add(rs.getString("competencia"));
+                }
+                i++;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    public static Map<Integer, String[]> getCursoRetos(Connection cn, int id) {
+        String query = "select c.nombre, reto.descripcion, fecha_entrega from reto inner join curso c on " +
+                "reto.id_curso_reto = c.id_curso  where id_curso =" + String.valueOf(id);
+        Map<Integer, String[]> result = new HashMap<>();
+        try {
+            Statement stmt = cn.createStatement();
+            ResultSet rs = stmt.executeQuery(query);
+            int i = 0;
+            while (rs.next()) {
+                result.put(i, new String[]{rs.getString("nombre"), rs.getString("descripcion"), rs.getString("fecha_entrega")});
+                i++;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+
 }
