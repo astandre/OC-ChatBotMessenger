@@ -92,6 +92,22 @@ public class DC_Curso {
         }
         return result;
     }
+    public static String[] getCursoLink(Connection cn, int id) {
+        String query = "select nombre, link from curso where id_curso = " + String.valueOf(id);
+        String result[] = new String[2];
+        try {
+            Statement stmt = cn.createStatement();
+            ResultSet rs = stmt.executeQuery(query);
+            if (rs.next()) {
+                result[0] = rs.getString("nombre");
+                result[1] = rs.getString("link");
+            }
+            return result;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return result;
+        }
+    }
 
     public static String[] getCursoDuracion(Connection cn, int id) {
         String query = "SELECT nombre, esfuerzo_est,duracion FROM curso WHERE id_curso = " + String.valueOf(id);

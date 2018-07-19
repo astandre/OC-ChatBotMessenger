@@ -17,7 +17,7 @@ public class Util {
         return quickReplies;
     }
     public static Button[] displayComandos() {
-        String botones[] = {"Cursos","Info","Pre","Fechas","Duracion","Competencias","Retos","Faq"};
+        String botones[] = {"Cursos","Info","Prerequisitos","Fechas","Inscripcion","Duracion","Competencias","Retos","Faq"};
         Button[] quickReplies = new Button[botones.length];
         for (int i = 0; i < botones.length; i++) {
             quickReplies[i] = new Button().setContentType("text").setTitle(botones[i]).setPayload(

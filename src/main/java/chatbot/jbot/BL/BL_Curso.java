@@ -56,6 +56,17 @@ public class BL_Curso {
         }
     }
 
+    public static String[] getCursoLink(Connection cn, String nombre) {
+        int id = DC_Sinonimo.getIdCurso(cn, nombre);
+       String result [] ;
+        if (id != 0) {
+            result = DC_Curso.getCursoLink(cn, id);
+            return result;
+        } else {
+            return null;
+        }
+    }
+
     public static String[] getCursoDuracion(Connection cn, String nombre) {
         int id = DC_Sinonimo.getIdCurso(cn, nombre);
         String result[];
