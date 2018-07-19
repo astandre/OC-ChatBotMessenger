@@ -1,32 +1,15 @@
 package chatbot.jbot.DC;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 
 public class DC_Curso {
 
-    public static void main(String[] args) {
-        try {
-            Connection connection = DriverManager.getConnection(
-                    "jdbc:mysql://localhost/ocdb",
-                    "root", "");
-            boolean valid = connection.isValid(50000);
-            System.out.println(valid ? "TEST OK" : "TEST FAIL");
-            Map<Integer, String[]> profesores = getCursoProfesor(connection, 20);
-            for (Map.Entry<Integer, String[]> entry : profesores.entrySet()) {
-                System.out.println("clave=" + entry.getKey() + ", valor=" + Arrays.toString(entry.getValue()));
-            }
-        } catch (java.sql.SQLException sqle) {
-            System.out.println("Error: " + sqle);
-        }
-    }
 
 
     public static ArrayList<String> getCursos(Connection connection) {
@@ -37,11 +20,7 @@ public class DC_Curso {
             ResultSet rs = stmt.executeQuery(query);
             while (rs.next()) {
                 cursos.add(rs.getString("nombre"));
-
             }
-//            connection.close();
-//            System.out.println("Disconnected from database");
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -95,7 +74,6 @@ public class DC_Curso {
             e.printStackTrace();
             return result;
         }
-
     }
 
     public static Map<Integer, String[]> getCursoProfesor(Connection cn, int id) {
@@ -194,6 +172,4 @@ public class DC_Curso {
         }
         return result;
     }
-
-
 }

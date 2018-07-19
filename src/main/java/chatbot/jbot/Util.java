@@ -17,7 +17,7 @@ public class Util {
         return quickReplies;
     }
     public static Button[] displayComandos() {
-        String botones[] = {"Cursos","Info","Pre","Fechas","Duracion"};
+        String botones[] = {"Cursos","Info","Pre","Fechas","Duracion","Competencias","Retos","Faq"};
         Button[] quickReplies = new Button[botones.length];
         for (int i = 0; i < botones.length; i++) {
             quickReplies[i] = new Button().setContentType("text").setTitle(botones[i]).setPayload(
@@ -64,6 +64,26 @@ public class Util {
                   cont++;
             }
         }
+        System.out.println(finalData);
         return finalData;
+    }
+    public static String cleanDataPregunta(String data) {
+        char special[] = {'¿', '?', '!', '¡', '(', ')', ',','%','&','$', '.', ';', ':', '_', '{', '}', '[', ']', '+', '/', '*', '<', '>'};
+        String cleanData = "";
+        data = StringUtils.stripAccents(data);
+        data = data.toUpperCase();
+        for (int i = 0; i < data.length(); i++) {
+            Boolean clean = true;
+            for (int j = 0; j < special.length; j++) {
+                if (data.charAt(i) == special[j]) {
+                    clean = false;
+                    break;
+                }
+            }
+            if (clean){
+                cleanData = cleanData + data.charAt(i);
+            }
+        }
+        return cleanData;
     }
 }

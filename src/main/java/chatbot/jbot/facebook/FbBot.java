@@ -2,6 +2,8 @@ package chatbot.jbot.facebook;
 
 
 import chatbot.jbot.BL.BL_Curso;
+import chatbot.jbot.BL.BL_FAQ;
+import chatbot.jbot.BL.BL_Inputs;
 import chatbot.jbot.JBotApplication;
 import chatbot.jbot.Util;
 import me.ramswaroop.jbot.core.common.Controller;
@@ -107,9 +109,10 @@ public class FbBot extends Bot {
 //                .setTemplateType("button").setText("Cursos disponibles").setButtons(buttons))));
         reply(event, response);
     }
+//TODO hacer que una respondido a un comando me redireccione al menu
 
-    /*
-    Comando informacion
+    /**
+     * Comando informacion
      */
     @Controller(events = {EventType.MESSAGE, EventType.QUICK_REPLY}, pattern = "^(info|Info)")
     public void info(Event event) {
@@ -127,7 +130,7 @@ public class FbBot extends Bot {
                 if (resp != null) {
                     reply(event, new Message().setText(resp));
                 } else {
-                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + "Revisa nuestros comandos " +
+                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + ". Revisa nuestros comandos " +
                             "disponibles").setQuickReplies(Util.displayComandos()));
                 }
             }
@@ -154,7 +157,7 @@ public class FbBot extends Bot {
                 if (resp != null) {
                     reply(event, new Message().setText(resp));
                 } else {
-                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + "Revisa nuestros comandos " +
+                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + ". Revisa nuestros comandos " +
                             "disponibles").setQuickReplies(Util.displayComandos()));
                 }
             }
@@ -187,7 +190,7 @@ public class FbBot extends Bot {
                         reply(event, new Message().setText(full_response));
                     }
                 } else {
-                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + "Revisa nuestros comandos " +
+                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + ". Revisa nuestros comandos " +
                             "disponibles").setQuickReplies(Util.displayComandos()));
                 }
             }
@@ -221,7 +224,7 @@ public class FbBot extends Bot {
                         reply(event, new Message().setText(full_response));
                     }
                 } else {
-                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + "Revisa nuestros comandos " +
+                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + ". Revisa nuestros comandos " +
                             "disponibles").setQuickReplies(Util.displayComandos()));
                 }
             }
@@ -253,12 +256,12 @@ public class FbBot extends Bot {
                         e.printStackTrace();
                     }
                     String full_response = "La inscripcion al curso " + resp[0] + " comienza el dia " +
-                            new SimpleDateFormat("dd-MM-YYY").format(fecha_inicio)
+                            new SimpleDateFormat("dd-MM-YYYY").format(fecha_inicio)
                             + " y el inicio de actividades es el dia " +
-                            new SimpleDateFormat("dd-MM-YYY").format(fecha_fin);
+                            new SimpleDateFormat("dd-MM-YYYY").format(fecha_fin);
                     reply(event, new Message().setText(full_response));
                 } else {
-                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + "Revisa nuestros comandos " +
+                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + ". Revisa nuestros comandos " +
                             "disponibles").setQuickReplies(Util.displayComandos()));
                 }
             }
@@ -279,7 +282,7 @@ public class FbBot extends Bot {
                 reply(event, new Message().setText("Desplegando cursos\nQue curso te gustaria conocer?")
                         .setQuickReplies(quickReplies));
             }
-            if (message.length() > 6) {
+            if (message.length() > 7) {
                 String curso = message.substring(7, message.length());
                 String resp[] = BL_Curso.getCursoFechas(cn, Util.cleanData(curso));
                 if (resp != null) {
@@ -291,12 +294,12 @@ public class FbBot extends Bot {
                         e.printStackTrace();
                     }
                     String full_response = "La inscripcion al curso " + resp[0] + " comienza el dia " +
-                            new SimpleDateFormat("dd-MM-YYY").format(fecha_inicio)
+                            new SimpleDateFormat("dd-MM-YYYY").format(fecha_inicio)
                             + " y el inicio de actividades es el dia " +
-                            new SimpleDateFormat("dd-MM-YYY").format(fecha_fin);
+                            new SimpleDateFormat("dd-MM-YYYY").format(fecha_fin);
                     reply(event, new Message().setText(full_response));
                 } else {
-                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + "Revisa nuestros comandos " +
+                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + ". Revisa nuestros comandos " +
                             "disponibles").setQuickReplies(Util.displayComandos()));
                 }
             }
@@ -324,7 +327,7 @@ public class FbBot extends Bot {
                             " semanas, con un esfuerzo estimado de " + resp[2] + " horas por semana";
                     reply(event, new Message().setText(full_response));
                 } else {
-                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + "Revisa nuestros comandos " +
+                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + ". Revisa nuestros comandos " +
                             "disponibles").setQuickReplies(Util.displayComandos()));
                 }
             }
@@ -345,7 +348,7 @@ public class FbBot extends Bot {
                 reply(event, new Message().setText("Desplegando cursos\nQue curso te gustaria conocer?")
                         .setQuickReplies(quickReplies));
             }
-            if (message.length() > 8) {
+            if (message.length() > 9) {
                 String curso = message.substring(9, message.length());
                 String resp[] = BL_Curso.getCursoDuracion(cn, Util.cleanData(curso));
                 if (resp != null) {
@@ -353,7 +356,7 @@ public class FbBot extends Bot {
                             " semanas, con un esfuerzo estimado de " + resp[2] + " horas por semana";
                     reply(event, new Message().setText(full_response));
                 } else {
-                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + "Revisa nuestros comandos " +
+                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + ". Revisa nuestros comandos " +
                             "disponibles").setQuickReplies(Util.displayComandos()));
                 }
             }
@@ -396,7 +399,7 @@ public class FbBot extends Bot {
                     }
                     reply(event, new Message().setText(full_response));
                 } else {
-                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + "Revisa nuestros comandos " +
+                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + ". Revisa nuestros comandos " +
                             "disponibles").setQuickReplies(Util.displayComandos()));
                 }
             }
@@ -417,7 +420,7 @@ public class FbBot extends Bot {
                 reply(event, new Message().setText("Desplegando cursos\nQue curso te gustaria conocer?")
                         .setQuickReplies(quickReplies));
             }
-            if (message.length() > 8) {
+            if (message.length() > 9) {
                 String curso = message.substring(9, message.length());
                 Map<Integer, String[]> resp = BL_Curso.getCursoProfesor(cn, Util.cleanData(curso));
                 String full_response;
@@ -440,7 +443,7 @@ public class FbBot extends Bot {
                     }
                     reply(event, new Message().setText(full_response));
                 } else {
-                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + "Revisa nuestros comandos " +
+                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + ". Revisa nuestros comandos " +
                             "disponibles").setQuickReplies(Util.displayComandos()));
                 }
             }
@@ -471,7 +474,7 @@ public class FbBot extends Bot {
                         if (i >= 1) {
                             if (i + 1 == resp.size()) {
                                 full_response = full_response + tema;
-                            }else{
+                            } else {
                                 full_response = full_response + tema + ", ";
                             }
                         }
@@ -479,7 +482,7 @@ public class FbBot extends Bot {
                     }
                     reply(event, new Message().setText(full_response));
                 } else {
-                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + "Revisa nuestros comandos " +
+                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + ". Revisa nuestros comandos " +
                             "disponibles").setQuickReplies(Util.displayComandos()));
                 }
             }
@@ -500,8 +503,8 @@ public class FbBot extends Bot {
                 reply(event, new Message().setText("Desplegando cursos\nQue curso te gustaria conocer?")
                         .setQuickReplies(quickReplies));
             }
-            if (message.length() > 5) {
-                String curso = message.substring(6, message.length());
+            if (message.length() > 6) {
+                String curso = message.substring(7, message.length());
                 ArrayList<String> resp = BL_Curso.getCursoTemas(cn, Util.cleanData(curso));
                 String full_response;
                 if (resp != null) {
@@ -511,7 +514,7 @@ public class FbBot extends Bot {
                         if (i >= 1) {
                             if (i + 1 == resp.size()) {
                                 full_response = full_response + tema;
-                            }else{
+                            } else {
                                 full_response = full_response + tema + ", ";
                             }
                         }
@@ -519,7 +522,7 @@ public class FbBot extends Bot {
                     }
                     reply(event, new Message().setText(full_response));
                 } else {
-                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + "Revisa nuestros comandos " +
+                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + ". Revisa nuestros comandos " +
                             "disponibles").setQuickReplies(Util.displayComandos()));
                 }
             }
@@ -527,13 +530,198 @@ public class FbBot extends Bot {
 
     }
 
+    /**
+     * Comando competencias
+     */
+    @Controller(events = {EventType.MESSAGE, EventType.QUICK_REPLY}, pattern = "^(competencias|Competencias)")
+    public void competencias(Event event) {
+        Connection cn = JBotApplication.getConnection();
+        ArrayList<String> cursos = BL_Curso.getCursos(cn);
+        if (event.getType() == EventType.MESSAGE) {
+            System.out.println(String.format("Text: %s", event.getMessage().getText()));
+            String message = event.getMessage().getText();
+            if (message.length() == 12) {
+                Button[] quickReplies = Util.displayCursoOptions(cursos, 0, "competencias", "1");
+                reply(event, new Message().setText("Que curso te gustaria conocer?").setQuickReplies(quickReplies));
+            } else {
+                String curso = message.substring(13, message.length());
+                ArrayList<String> resp = BL_Curso.getCursoCompetencias(cn, Util.cleanData(curso));
+                String full_response;
+                if (resp != null) {
+                    int i = 0;
+                    full_response = "Las competencias a obtener del curso: " + resp.get(0) + " son: ";
+                    for (String tema : resp) {
+                        if (i >= 1) {
+                            if (i + 1 == resp.size()) {
+                                full_response = full_response + tema;
+                            } else {
+                                full_response = full_response + tema + ", ";
+                            }
+                        }
+                        i++;
+                    }
+                    reply(event, new Message().setText(full_response));
+                } else {
+                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + ". Revisa nuestros comandos " +
+                            "disponibles").setQuickReplies(Util.displayComandos()));
+                }
+            }
+        } else {
+            System.out.println(String.format("Payload: %s", event.getMessage().getQuickReply().getPayload()));
+            String message = event.getMessage().getQuickReply().getPayload();
+            if (message.equals("competencias")) {
+                Button[] quickReplies = Util.displayCursoOptions(cursos, 0, "competencias", "1");
+                reply(event, new Message().setText("Que curso te gustaria conocer?").setQuickReplies(quickReplies));
+            }
+            if (message.equals("competencias1")) {
+                Button[] quickReplies = Util.displayCursoOptions(cursos, 8, "competencias", "2");
+                reply(event, new Message().setText("Desplegando más cursos\nQue curso te gustaria conocer?")
+                        .setQuickReplies(quickReplies));
+            }
+            if (message.equals("competencias2")) {
+                Button[] quickReplies = Util.displayCursoOptions(cursos, 16, "competencias", "");
+                reply(event, new Message().setText("Desplegando cursos\nQue curso te gustaria conocer?")
+                        .setQuickReplies(quickReplies));
+            }
+            if (message.length() > 13) {
+                String curso = message.substring(13, message.length());
+                ArrayList<String> resp = BL_Curso.getCursoCompetencias(cn, Util.cleanData(curso));
+                String full_response;
+                if (resp != null) {
+                    int i = 0;
+                    full_response = "Las competencias a obtener del curso: " + resp.get(0) + " son: ";
+                    for (String tema : resp) {
+                        if (i >= 1) {
+                            if (i + 1 == resp.size()) {
+                                full_response = full_response + tema;
+                            } else {
+                                full_response = full_response + tema + ", ";
+                            }
+                        }
+                        i++;
+                    }
+                    reply(event, new Message().setText(full_response));
+                } else {
+                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + ". Revisa nuestros comandos " +
+                            "disponibles").setQuickReplies(Util.displayComandos()));
+                }
+            }
+        }
+
+    }
 
     /**
-     *    @Controller(events = {EventType.MESSAGE, EventType.POSTBACK}, pattern = "^(menu|Menu)$")
-     *     public void showMenu(Event event) {
-     *         reply(event, new Message().setText("Comandos disponibles:").setQuickReplies(Util.displayComandos()));
-     *     }
+     * Comando retos
      */
+    @Controller(events = {EventType.MESSAGE, EventType.QUICK_REPLY}, pattern = "^(retos|Retos)")
+    public void retos(Event event) throws ParseException {
+        Connection cn = JBotApplication.getConnection();
+        ArrayList<String> cursos = BL_Curso.getCursos(cn);
+        if (event.getType() == EventType.MESSAGE) {
+            System.out.println(String.format("Text: %s", event.getMessage().getText()));
+            String message = event.getMessage().getText();
+            if (message.length() == 5) {
+                Button[] quickReplies = Util.displayCursoOptions(cursos, 0, "retos", "1");
+                reply(event, new Message().setText("Que curso te gustaria conocer?").setQuickReplies(quickReplies));
+            } else {
+                String curso = message.substring(6, message.length());
+                Map<Integer, String[]> resp = BL_Curso.getCursoRetos(cn, Util.cleanData(curso));
+                String full_response;
+                if (resp != null) {
+                    if (resp.size() >= 2) {
+                        Date fecha = new SimpleDateFormat("dd-MM-yyyy").parse(resp.get(0)[2]);
+                        full_response = "Los retos del curso " + resp.get(0)[0] + " son ";
+                        for (Map.Entry<Integer, String[]> entry : resp.entrySet()) {
+                            full_response = full_response + entry.getValue()[1] + " FE: (" + new SimpleDateFormat("dd-MM-YYY").format(fecha) + ") ";
+                        }
+                    } else {
+                        Date fecha = new SimpleDateFormat("dd-MM-yyyy").parse(resp.get(0)[2]);
+                        full_response = "El reto de " + resp.get(0)[0] + " es :" + resp.get(0)[1] + " y debera ser entregado el dia: "
+                                + new SimpleDateFormat("dd-MM-YYY").format(fecha);
+                    }
+                    reply(event, new Message().setText(full_response));
+                } else {
+                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + ". Revisa nuestros comandos " +
+                            "disponibles").setQuickReplies(Util.displayComandos()));
+                }
+            }
+        } else {
+            System.out.println(String.format("Payload: %s", event.getMessage().getQuickReply().getPayload()));
+            String message = event.getMessage().getQuickReply().getPayload();
+            if (message.equals("retos")) {
+                Button[] quickReplies = Util.displayCursoOptions(cursos, 0, "retos", "1");
+                reply(event, new Message().setText("Que curso te gustaria conocer?").setQuickReplies(quickReplies));
+            }
+            if (message.equals("retos1")) {
+                Button[] quickReplies = Util.displayCursoOptions(cursos, 8, "retos", "2");
+                reply(event, new Message().setText("Desplegando más cursos\nQue curso te gustaria conocer?")
+                        .setQuickReplies(quickReplies));
+            }
+            if (message.equals("retos2")) {
+                Button[] quickReplies = Util.displayCursoOptions(cursos, 16, "retos", "");
+                reply(event, new Message().setText("Desplegando cursos\nQue curso te gustaria conocer?")
+                        .setQuickReplies(quickReplies));
+            }
+            if (message.length() > 6) {
+                String curso = message.substring(6, message.length());
+                Map<Integer, String[]> resp = BL_Curso.getCursoRetos(cn, Util.cleanData(curso));
+                String full_response;
+                if (resp.size() > 0) {
+                    if (resp.size() >= 2) {
+                        full_response = "Los retos del curso " + resp.get(0)[0] + " son ";
+                        for (Map.Entry<Integer, String[]> entry : resp.entrySet()) {
+                            full_response = full_response + entry.getValue()[0] + " FE: (" + entry.getValue()[1] + ") ";
+                        }
+                    } else {
+                        Date fecha = new SimpleDateFormat("dd-MM-yyyy").parse(resp.get(0)[2]);
+                        full_response = "El reto de " + resp.get(0)[0] + " es :" + resp.get(0)[1] + " y debera ser entregado el dia: "
+                                + new SimpleDateFormat("dd-MM-YYY").format(fecha);
+                    }
+                    reply(event, new Message().setText(full_response));
+                } else {
+                    reply(event, new Message().setText("No se ha encontrado el curso " + curso + ". Revisa nuestros comandos " +
+                            "disponibles").setQuickReplies(Util.displayComandos()));
+                }
+            }
+        }
+    }
+
+    /**
+     * Comando FAQ
+     * TODO test
+     */
+    @Controller(events = {EventType.MESSAGE, EventType.QUICK_REPLY}, pattern = "^(faq|Faq|FAQ)")
+    public void faq(Event event) throws ParseException {
+        Connection cn = JBotApplication.getConnection();
+        String message = event.getMessage().getText();
+        if (event.getType() == EventType.MESSAGE) {
+            if (message.length() == 3) {
+                reply(event, new Message().setText("Recuerda usar el comando Faq seguido de tu pregunta"));
+            } else {
+//                if (BL_Inputs.insertQuestion(cn,name,created_at,usuario,text,source,location,input)!=0){
+//                    System.out.println("Pregunta guardada en base de datos");
+//                }else{
+//                    System.out.println("No se ha guardado en la base de datos");
+//                }
+                String pregunta = message.substring(4, message.length());
+                String resp[] = BL_FAQ.getRespuesta(cn, pregunta);
+//                TODO intentar obtener los datos del una persona
+                String full_response;
+                if (resp[0] != null) {
+                    full_response = resp[0] + "... " + resp[1];
+                    reply(event, new Message().setText(full_response));
+
+                } else {
+                    reply(event, new Message().setText("No se ha encontrado tu pregunta, puedes revisar nuestras preguntas" +
+                            " frecuentes http://opencampus.utpl.edu.ec/faq ; O revisa nuestros comandos disponibles").setQuickReplies(Util.displayComandos()));
+                }
+            }
+        } else {
+            reply(event, new Message().setText("Para preguntar usar el comando Faq seguido de tu pregunta"));
+        }
+    }
+
+
     /**
      * This method gets invoked when a user clicks on the "Get Started" button or just when someone simply types
      * hi, hello or hey. When it is the former, the event type is {@code EventType.POSTBACK} with the payload "hi"
@@ -551,208 +739,4 @@ public class FbBot extends Bot {
         reply(event, new Message().setText("Te gustaria ver las peliculas disponbiles").setQuickReplies(quickReplies));
     }
 
-    /**
-     * mostrar informacion acerca de pelicula
-     *
-     * @param event
-     */
-//    @Controller(events = {EventType.MESSAGE, EventType.QUICK_REPLY}, pattern = "(info)")
-//    public void showInfoMovie(Event event) {
-//        reply(event, "Informacion");
-//        int aux = event.getMessage().getQuickReply().getPayload().length();
-//        String word = event.getMessage().getQuickReply().getPayload().substring(5, aux);
-//        for (Movie movie : lstMovies) {
-//            if (movie.getNombre().contains(word)) {
-//                String movieTitle = movie.getNombre();
-//                reply(event, movieTitle + "\n" + movie.getSinopsis());
-//            }
-//
-//        }
-//    }
-
-    /**
-     * muestra las peliculas disnponibles en botones
-     */
-//    @Controller(events = {EventType.MESSAGE, EventType.POSTBACK}, pattern = "(?i:disponible)")
-//    public void showMovies(Event event) {
-//        // quick reply buttons
-//        Button[] quickReplies = new Button[lstMovies.size()];
-//        int i = 0;
-//        for (Movie movie : lstMovies) {
-//            quickReplies[i] = new Button().setContentType("text").setTitle(movie.getNombre()).setPayload("info " + movie.getNombre());
-//            i++;
-//
-//        }
-//
-//        reply(event, new Message().setText("Peliculas disponibles").setQuickReplies(quickReplies));
-//    }
-
-
-    /**
-     * Mostrar ayuda
-     */
-    @Controller(events = EventType.MESSAGE, pattern = "(ayuda|Ayuda)")
-    public void showHelp(Event event) {
-        reply(event, "Que puedo hacer: \n 1) Mostrar peliculas disponibles \n 2) Mostrar informacion de pelicula \n 3) Mostrar mejor pelicula");
-    }
-
-    /**
-     * This method gets invoked when the user clicks on a quick reply button whose payload is either "yes" or "no".
-     *
-     * @param event
-     */
-//    @Controller(events = EventType.QUICK_REPLY, pattern = "(si|no)")
-//    public void onReceiveQuickReply(Event event) {
-//        if ("si".equals(event.getMessage().getQuickReply().getPayload())) {
-//
-//            for (Movie movie : lstMovies) {
-//                String movieTitle = movie.getNombre();
-//                reply(event, movieTitle);
-//            }
-//
-//        } else {
-//            reply(event, "Hasta luego");
-//        }
-//    }
-
-    /**
-     * This method is invoked when the user types "Show Buttons" or something which has "button" in it as defined
-     * in the {@code pattern}.
-     *
-     * @param event
-     */
-    @Controller(events = EventType.MESSAGE, pattern = "(?i:button)")
-    public void showButtons(Event event) {
-        Button[] buttons = new Button[]{
-                new Button().setType("web_url").setUrl("http://blog.ramswaroop.me").setTitle("JBot Docs"),
-                new Button().setType("web_url").setUrl("https://goo.gl/uKrJWX").setTitle("Buttom Template")
-        };
-        reply(event, new Message().setAttachment(new Attachment().setType("template").setPayload(new Payload()
-                .setTemplateType("button").setText("These are 2 link buttons.").setButtons(buttons))));
-    }
-
-    @Controller(events = EventType.MESSAGE, pattern = "(image)")
-    public void showImage(Event event) {
-//        reply(event, new Message().setAttachment(new Attachment().setType("template").setPayload(new Payload()
-//                .setTemplateType("list").setElements(elements))));
-
-        reply(event, new Message().setAttachment(
-                new Attachment()
-                        .setType("image")
-                        .setPayload(
-                                new Payload()
-                                        .setUrl("https://ia.media-imdb.com/images/M/MV5BMjMxNjY2MDU1OV5BMl5BanBnXkFtZTgwNzY1MTUwNTM@._V1_UX182_CR0,0,182,268_AL_.jpg"))));
-    }
-
-    /**
-     * This method is invoked when the user types "Show List" or something which has "list" in it as defined
-     * in the {@code pattern}.
-     *
-     * @param event
-     */
-//    @Controller(events = EventType.MESSAGE, pattern = "(?i:list)")
-//    public void showList(Event event) {
-//        int i = 0;
-//        Element[] elements = new Element[lstMovies.size()];
-////        {
-////                new Element().setTitle("AnimateScroll").setSubtitle("A jQuery Plugin for Animating Scroll.")
-////                        .setImageUrl("https://plugins.compzets.com/images/as-logo.png")
-////                        .setDefaultAction(new Button().setType("web_url").setMessengerExtensions(true)
-////                        .setUrl("https://plugins.compzets.com/animatescroll/")),
-////                new Element().setTitle("Windows on Top").setSubtitle("Keeps a specific Window on Top of all others.")
-////                        .setImageUrl("https://plugins.compzets.com/images/compzets-logo.png")
-////                        .setDefaultAction(new Button().setType("web_url").setMessengerExtensions(true)
-////                        .setUrl("https://www.compzets.com/view-upload.php?id=702&action=view")),
-////                new Element().setTitle("SimpleFill").setSubtitle("Simplest form filler ever.")
-////                        .setImageUrl("https://plugins.compzets.com/simplefill/chrome-extension/icon-64.png")
-////                        .setDefaultAction(new Button().setType("web_url").setMessengerExtensions(true)
-////                        .setUrl("https://plugins.compzets.com/simplefill/"))
-////        };
-//        for (Movie movie : lstMovies) {
-//
-//            elements[i] = new Element().setTitle(movie.getNombre()).setSubtitle(String.valueOf(movie.getCalificacion()))
-//                    .setImageUrl(movie.getImg())
-//                    .setDefaultAction(new Button().setType("web_url").setMessengerExtensions(true)
-//                            .setUrl(movie.getUrl()));
-//            i++;
-//        }
-//
-//        reply(event, new Message().setAttachment(new Attachment().setType("template").setPayload(new Payload()
-//                .setTemplateType("list").setElements(elements))));
-//    }
-
-    /**
-     * Show the github project url when the user says bye.
-     *
-     * @param event
-     */
-    @Controller(events = EventType.MESSAGE, pattern = "(?i)(chao|hasta luego|nos vemos|adios)")
-    public void showGithubLink(Event event) {
-        reply(event, new Message().setAttachment(new Attachment().setType("template").setPayload(new Payload()
-                .setTemplateType("button").setText("Hasta luego!").setButtons(new Button[]{new Button()
-                        .setType("web_url").setTitle("Acerca De").setUrl("https://git.taw.utpl.edu.ec/andreherrera97/chatbot")}))));
-    }
-
-
-    // Conversation feature of JBot
-
-    /**
-     * Type "setup meeting" to start a conversation with the bot. Provide the name of the next method to be
-     * invoked in {@code next}. This method is the starting point of the conversation (as it
-     * calls {@link Bot#startConversation(Event, String)} within it. You can chain methods which will be invoked
-     * one after the other leading to a conversation.
-     *
-     * @param event
-     */
-//    @Controller(pattern = "(?i)(setup meeting)", next = "confirmTiming")
-//    public void setupMeeting(Event event) {
-//        startConversation(event, "confirmTiming");   // start conversation
-//        reply(event, "Cool! At what time (ex. 15:30) do you want me to set up the meeting?");
-//    }
-//
-//    /**
-//     * This method will be invoked after {@link FbBot#setupMeeting(Event)}. You need to
-//     * call {@link Bot#nextConversation(Event)} to jump to the next question in the conversation.
-//     *
-//     * @param event
-//     */
-//    @Controller(next = "askTimeForMeeting")
-//    public void confirmTiming(Event event) {
-//        reply(event, "Your meeting is set at " + event.getMessage().getText() +
-//                ". Would you like to repeat it tomorrow?");
-//        nextConversation(event);    // jump to next question in conversation
-//    }
-//
-//    /**
-//     * This method will be invoked after {@link FbBot#confirmTiming(Event)}. You can
-//     * call {@link Bot#stopConversation(Event)} to end the conversation.
-//     *
-//     * @param event
-//     */
-//    @Controller(next = "askWhetherToRepeat")
-//    public void askTimeForMeeting(Event event) {
-//        if (event.getMessage().getText().contains("yes")) {
-//            reply(event, "Okay. Would you like me to set a reminder for you?");
-//            nextConversation(event);    // jump to next question in conversation
-//        } else {
-//            reply(event, "No problem. You can always schedule one with 'setup meeting' command.");
-//            stopConversation(event);    // stop conversation only if user says no
-//        }
-//    }
-//
-//    /**
-//     * This method will be invoked after {@link FbBot#askTimeForMeeting(Event)}. You can
-//     * call {@link Bot#stopConversation(Event)} to end the conversation.
-//     *
-//     * @param event
-//     */
-//    @Controller
-//    public void askWhetherToRepeat(Event event) {
-//        if (event.getMessage().getText().contains("yes")) {
-//            reply(event, "Great! I will remind you tomorrow before the meeting.");
-//        } else {
-//            reply(event, "Okay, don't forget to attend the meeting tomorrow :)");
-//        }
-//        stopConversation(event);    // stop conversation
-//    }
 }
